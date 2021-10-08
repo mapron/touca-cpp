@@ -1,0 +1,12 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+includedir=${prefix}/include
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+
+Name: touca
+Description: Touca SDK for C++
+URL: https://github.com/trytouca/touca-cpp
+Version: @TOUCA_VERSION@
+CFlags: -I${includedir}
+Libs: -L${libdir} -l@TOUCA_LIB_NAME@
+Requires: @PKG_CONFIG_REQUIRES@

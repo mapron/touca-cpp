@@ -13,6 +13,7 @@ if (TOUCA_BUILD_FRAMEWORK)
 endif()
 
 add_library(${TOUCA_TARGET_MAIN} "")
+add_library(touca::touca ALIAS ${TOUCA_TARGET_MAIN})
 
 target_sources(
         ${TOUCA_TARGET_MAIN}

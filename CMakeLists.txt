@@ -119,8 +119,9 @@ if (TOUCA_BUILD_EXAMPLES)
 endif()
 
 if (TOUCA_INSTALL)
+    set(TOUCA_INSTALL_TARGETS ${TOUCA_TARGET_MAIN} touca_project_options)
     install(
-        TARGETS ${TOUCA_TARGET_MAIN}
+        TARGETS ${TOUCA_INSTALL_TARGETS}
         EXPORT touca
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
                 COMPONENT Touca_Runtime
@@ -134,6 +135,20 @@ if (TOUCA_INSTALL)
     install(DIRECTORY "${CMAKE_BINARY_DIR}/generated/touca"
             DESTINATION include MESSAGE_NEVER FILES_MATCHING PATTERN "*.h*")
 
+    set(project_config_in "${CMAKE_CURRENT_LIST_DIR}/cmake/config.cmake.in")
+    set(project_config_out "${CMAKE_CURRENT_BINARY_DIR}/generated/touca-config.cmake")
+    set(config_targets_file "toucaConfigTargets.cmake")
+    set(version_config_file "${CMAKE_CURRENT_BINARY_DIR}/toucaConfigVersion.cmake")
+    set(export_dest_dir "${CMAKE_INSTALL_LIBDIR}/cmake/touca")
+
+    # install(EXPORT touca DESTINATION ${export_dest_dir} NAMESPACE touca::)
+    include(CMakePackageConfigHelpers)
+    configure_package_config_file("${project_config_in}" "${project_config_out}" INSTALL_DESTINATION ${export_dest_dir})
+    write_basic_package_version_file("${version_config_file}" VERSION ${TOUCA_VERSION} COMPATIBILITY SameMajorVersion)
+    install(FILES "${project_config_out}" "${version_config_file}" DESTINATION ${export_dest_dir})
+
+    set(ignored_files "")
+
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Touca SDK for C++")
     set(CPACK_PACKAGE_HOMEPAGE_URL "https://touca.io")
     set(CPACK_PACKAGE_NAME "touca")
@@ -141,5 +156,7 @@ if (TOUCA_INSTALL)
     set(CPACK_RESOURCE_FILE_LICENSE "${TOUCA_CLIENT_ROOT_DIR}/LICENSE")
     set(CPACK_RESOURCE_FILE_README "${TOUCA_CLIENT_ROOT_DIR}/README.md")
     set(CPACK_SOURCE_GENERATOR "TGZ;ZIP")
+    set(CPACK_SOURCE_IGNORE_FILES ${ignored_files})
+    set(CPACK_SOURCE_PACKAGE_FILE_NAME touca-${TOUCA_VERSION})
     include(CPack)
 endif()
