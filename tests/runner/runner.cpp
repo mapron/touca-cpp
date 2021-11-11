@@ -335,12 +335,11 @@ TEST_CASE("framework-simple-workflow-valid-use") {
     CHECK_THAT(
         fileJson,
         Catch::Contains(
-            R"("teamslug":"some-team","testsuite":"some-suite","version":"1.0","testcase":"4")"));
-    CHECK_THAT(fileJson,
-               Catch::Contains(R"({"key":"some-number","value":"1024"})"));
-    CHECK_THAT(fileJson,
-               Catch::Contains(R"({"key":"some-string","value":"foo"})"));
-    CHECK_THAT(fileJson, Catch::Contains(R"("assertion":[])"));
+            R"("team":"some-team","suite":"some-suite","version":"1.0","testcase":"4")"));
+    CHECK_THAT(fileJson, Catch::Contains(
+                             R"({"c":0,"f":"l","k":"some-number","v":1024})"));
+    CHECK_THAT(fileJson, Catch::Contains(
+                             R"({"c":0,"f":"s","k":"some-string","v":"foo"})"));
     CHECK_THAT(fileJson, Catch::Contains(R"("metrics":[])"));
   }
   touca::reset_test_runner();

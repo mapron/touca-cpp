@@ -9,6 +9,21 @@
 namespace touca {
 namespace detail {
 
+std::string to_string(const internal_type type) {
+  static std::map<internal_type, std::string> formats({
+      {internal_type::array, "a"},
+      {internal_type::number_double, "d"},
+      {internal_type::number_float, "f"},
+      {internal_type::number_signed, "l"},
+      {internal_type::object, "o"},
+      {internal_type::string, "s"},
+      {internal_type::boolean, "t"},
+      {internal_type::number_unsigned, "u"},
+      {internal_type::null, "v"},
+  });
+  return formats.at(type);
+}
+
 flatbuffers::Offset<fbs::TypeWrapper> serialize(
     flatbuffers::FlatBufferBuilder& builder, const detail::boolean_t value) {
   fbs::BoolBuilder bool_builder(builder);
@@ -273,17 +288,32 @@ void to_json(nlohmann::json& out, const data_point& value) {
     case detail::internal_type::array: {
       out = nlohmann::json::array();
       for (const auto& element : *value._value.array) {
-        out.push_back(nlohmann::json(element));
+        nlohmann::json entry(
+            {{"f", to_string(element.type())}, {"v", element}});
+        if (element.type() == detail::internal_type::object) {
+          entry.emplace("n", element._name);
+        }
+        out.push_back(nlohmann::json(entry));
       }
       break;
     }
     case detail::internal_type::object: {
-      auto items = nlohmann::ordered_json::object();
+      nlohmann::json items = nlohmann::ordered_json::array();
       for (const auto& member : *value._value.object) {
-        items.emplace(member.first, nlohmann::json(member.second));
+        nlohmann::json entry({
+            {"f", to_string(member.second.type())},
+            {"k", member.first},
+            {"v", member.second},
+        });
+        if (member.second.type() == detail::internal_type::object) {
+          entry.emplace("n", member.second._name);
+        }
+        items.push_back(entry);
       }
-      out = nlohmann::ordered_json::object();
-      out[value._name] = items;
+      out = nlohmann::ordered_json::object(
+          {{"f", to_string(detail::internal_type::object)},
+           {"n", value._name},
+           {"v", items}});
       break;
     }
     default:

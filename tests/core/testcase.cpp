@@ -35,9 +35,10 @@ TEST_CASE("Testcase") {
       testcase.add_hit_count("some-key");
       testcase.add_hit_count("some-other-key");
       testcase.add_hit_count("some-key");
-      const auto expected =
-          R"("results":[{"key":"some-key","value":"2"},{"key":"some-other-key","value":"1"}])";
-      REQUIRE_THAT(testcase.json().dump(), Catch::Contains(expected));
+      REQUIRE_THAT(
+          testcase.json().dump(),
+          Catch::Contains(
+              R"("results":[{"c":0,"f":"u","k":"some-key","v":2},{"c":0,"f":"u","k":"some-other-key","v":1}])"));
     }
 
     SECTION("unexpected-use: key is already used to store boolean") {
@@ -67,9 +68,10 @@ TEST_CASE("Testcase") {
         const auto value = data_point::number_unsigned(i);
         testcase.add_array_element("some-key", value);
       }
-      const auto expected =
-          R"("results":[{"key":"some-key","value":"[0,1,2]"}])";
-      REQUIRE_THAT(testcase.json().dump(), Catch::Contains(expected));
+      REQUIRE_THAT(
+          testcase.json().dump(),
+          Catch::Contains(
+              R"("results":[{"c":0,"f":"a","k":"some-key","v":[{"f":"u","v":0},{"f":"u","v":1},{"f":"u","v":2}]}])"));
     }
     SECTION("unexpected-use") {
       const auto someBool = data_point::boolean(true);
@@ -101,16 +103,13 @@ TEST_CASE("Testcase") {
     testcase.clear();
     const auto after = testcase.json().dump();
 
-    const auto check1 =
-        R"("results":[{"key":"some-array","value":"[true]"},{"key":"some-key","value":"true"},{"key":"some-new-key","value":"1"}])";
-    const auto check2 =
-        R"("assertion":[{"key":"some-other-key","value":"true"}])";
-    const auto check3 = R"("metrics":[{"key":"some-metric","value":"0"}])";
-    const auto check4 = R"("results":[],"assertion":[],"metrics":[])";
-    CHECK_THAT(before, Catch::Contains(check1));
-    CHECK_THAT(before, Catch::Contains(check2));
-    CHECK_THAT(before, Catch::Contains(check3));
-    CHECK_THAT(after, Catch::Contains(check4));
+    CHECK_THAT(
+        before,
+        Catch::Contains(
+            R"("results":[{"c":0,"f":"a","k":"some-array","v":[{"f":"t","v":true}]},{"c":0,"f":"t","k":"some-key","v":true},{"c":0,"f":"u","k":"some-new-key","v":1},{"c":1,"f":"t","k":"some-other-key","v":true}])"));
+    CHECK_THAT(before,
+               Catch::Contains(R"("metrics":[{"k":"some-metric","v":0}])"));
+    CHECK_THAT(after, Catch::Contains(R"("results":[],"metrics":[])"));
   }
 
   SECTION("overview") {
@@ -229,15 +228,18 @@ TEST_CASE("Testcase") {
     CHECK(cmp.overview().keysCountMissing == 1);
 
     const auto& comparison = cmp.json().dump();
-    const auto& check1 =
-        R"("assertions":{"commonKeys":[],"missingKeys":[],"newKeys":[]})";
-    const auto& check2 =
-        R"("results":{"commonKeys":[{"name":"chanteur","score":0.0,"srcType":"array","srcValue":"[\"leo-ferre\"]","dstValue":"[\"jean-ferrat\"]"}],"missingKeys":[{"name":"some-other-key","dstType":"number","dstValue":"1"}],"newKeys":[{"name":"some-key","srcType":"number","srcValue":"1"}]})";
-    const auto& check3 =
-        R"("metrics":{"commonKeys":[{"name":"a","score":1.0,"srcType":"number","srcValue":"0"}],"missingKeys":[{"name":"c","dstType":"number","dstValue":"0"}],"newKeys":[{"name":"b","srcType":"number","srcValue":"0"}]})";
-    CHECK_THAT(comparison, Catch::Contains(check1));
-    CHECK_THAT(comparison, Catch::Contains(check2));
-    CHECK_THAT(comparison, Catch::Contains(check3));
+    CHECK_THAT(
+        comparison,
+        Catch::Contains(
+            R"("assertions":{"commonKeys":[],"missingKeys":[],"newKeys":[]})"));
+    CHECK_THAT(
+        comparison,
+        Catch::Contains(
+            R"("results":{"commonKeys":[{"name":"chanteur","score":0.0,"srcType":"array","srcValue":"[{\"f\":\"s\",\"v\":\"leo-ferre\"}]","dstValue":"[{\"f\":\"s\",\"v\":\"jean-ferrat\"}]"}],"missingKeys":[{"name":"some-other-key","dstType":"number","dstValue":"1"}],"newKeys":[{"name":"some-key","srcType":"number","srcValue":"1"}]})"));
+    CHECK_THAT(
+        comparison,
+        Catch::Contains(
+            R"("metrics":{"commonKeys":[{"name":"a","score":1.0,"srcType":"number","srcValue":"0"}],"missingKeys":[{"name":"c","dstType":"number","dstValue":"0"}],"newKeys":[{"name":"b","srcType":"number","srcValue":"0"}]})"));
 
     const auto& overview = cmp.overview().json().dump();
     const auto& check4 =

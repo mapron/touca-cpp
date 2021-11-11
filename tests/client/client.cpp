@@ -3,6 +3,7 @@
 #include "touca/client/detail/client.hpp"
 
 #include "catch2/catch.hpp"
+#include "nlohmann/json.hpp"
 #include "tests/devkit/tmpfile.hpp"
 #include "touca/devkit/resultfile.hpp"
 #include "touca/devkit/utils.hpp"
@@ -97,8 +98,13 @@ TEST_CASE("using a configured client") {
     CHECK_NOTHROW(client.add_hit_count("some-other-value"));
     CHECK_NOTHROW(client.add_array_element("some-array-value", v1));
     const auto& content = save_and_read_back(client);
+    const auto& content_json = nlohmann::json::parse(content);
+    REQUIRE(content_json.is_array());
+    CHECK(content_json.at(0).contains("header"));
+    CHECK(content_json.at(0).contains("metrics"));
+    CHECK(content_json.at(0).contains("results"));
     const auto& expected =
-        R"("results":[{"key":"some-array-value","value":"[true]"},{"key":"some-other-value","value":"1"},{"key":"some-value","value":"true"}])";
+        R"("results":[{"c":0,"f":"a","k":"some-array-value","v":[{"f":"t","v":true}]},{"c":0,"f":"u","k":"some-other-value","v":1},{"c":0,"f":"t","k":"some-value","v":true}])";
     CHECK_THAT(content, Catch::Contains(expected));
   }
 
@@ -126,9 +132,8 @@ TEST_CASE("using a configured client") {
     CHECK(tc->metrics().size() == 1);
     CHECK(tc->metrics().count("b"));
     const auto& content = save_and_read_back(client);
-    const auto& expected =
-        R"("results":[],"assertion":[],"metrics":[{"key":"b","value":"0"}])";
-    CHECK_THAT(content, Catch::Contains(expected));
+    CHECK_THAT(content, Catch::Contains(
+                            R"("results":[],"metrics":[{"k":"b","v":0}]}])"));
   }
 
   SECTION("forget_testcase") {

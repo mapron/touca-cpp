@@ -41,6 +41,8 @@ enum class TOUCA_CLIENT_API internal_type : std::uint8_t {
   unknown
 };
 
+std::string to_string(const internal_type type);
+
 template <typename T, typename... Args>
 static T* create(Args&&... args) {
   std::allocator<T> alloc;
@@ -105,6 +107,7 @@ class TOUCA_CLIENT_API data_point {
   static data_point string(const detail::string_t& value);
 
   void increment();
+  std::string object_name() const { return _name; };
   detail::array_t* as_array() const;
   detail::number_unsigned_t as_metric() const;
   detail::internal_type type() const;
@@ -243,8 +246,9 @@ class TOUCA_CLIENT_API object {
     return *this;
   }
 
+  const std::string name;
+
  private:
-  std::string name;
   detail::object_t* _v;
 };
 

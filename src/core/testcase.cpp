@@ -71,13 +71,12 @@ std::string Testcase::Metadata::describe() const {
 }
 
 nlohmann::ordered_json Testcase::Metadata::json() const {
-  return nlohmann::ordered_json({
-      {"teamslug", teamslug},
-      {"testsuite", testsuite},
-      {"version", version},
-      {"testcase", testcase},
-      {"builtAt", builtAt},
-  });
+  return nlohmann::ordered_json({{"team", teamslug},
+                                 {"suite", testsuite},
+                                 {"version", version},
+                                 {"testcase", testcase},
+                                 {"t", builtAt},
+                                 {"v", TOUCA_VERSION}});
 }
 
 void Testcase::tic(const std::string& key) {
@@ -158,33 +157,27 @@ MetricsMap Testcase::metrics() const {
 }
 
 nlohmann::ordered_json Testcase::json() const {
-  auto results = nlohmann::json::array();
+  auto json_results = nlohmann::json::array();
   for (const auto& entry : _resultsMap) {
-    if (entry.second.typ != ResultCategory::Check) {
-      continue;
+    nlohmann::json item(
+        {{"c", entry.second.typ == ResultCategory::Check ? 0 : 1},
+         {"f", to_string(entry.second.val.type())},
+         {"k", entry.first},
+         {"v", entry.second.val}});
+    if (entry.second.val.type() == detail::internal_type::object) {
+      item.emplace("n", entry.second.val.object_name());
     }
-    results.push_back(
-        {{"key", entry.first}, {"value", entry.second.val.to_string()}});
-  }
-
-  auto assumptions = nlohmann::json::array();
-  for (const auto& entry : _resultsMap) {
-    if (entry.second.typ != ResultCategory::Assert) {
-      continue;
-    }
-    assumptions.push_back(
-        {{"key", entry.first}, {"value", entry.second.val.to_string()}});
+    json_results.push_back(item);
   }
 
   auto json_metrics = nlohmann::json::array();
   for (const auto& entry : metrics()) {
     json_metrics.push_back(
-        {{"key", entry.first}, {"value", entry.second.value.to_string()}});
+        nlohmann::json({{"k", entry.first}, {"v", entry.second.value}}));
   }
 
-  return nlohmann::ordered_json({{"metadata", {_metadata.json()}},
-                                 {"results", results},
-                                 {"assertion", assumptions},
+  return nlohmann::ordered_json({{"header", _metadata.json()},
+                                 {"results", json_results},
                                  {"metrics", json_metrics}});
 }
 

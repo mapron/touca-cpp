@@ -50,6 +50,7 @@ TEST_CASE("Simple Data Types") {
   SECTION("type: null") {
     auto value = data_point::null();
     SECTION("initialize") {
+      CHECK(flatten(value).empty());
       CHECK(value.to_string() == "null");
       CHECK(internal_type::null == value.type());
     }
@@ -340,9 +341,11 @@ TEST_CASE("Simple Data Types") {
   SECTION("type: array") {
     SECTION("initialize") {
       const auto& value = data_point(array());
+      CHECK(flatten(value).empty());
       CHECK(value.to_string() == "[]");
       CHECK_NOTHROW(value.as_array()->push_back(data_point::boolean(false)));
-      CHECK(value.to_string() == "[false]");
+      CHECK(flatten(value).count("[0]"));
+      CHECK(value.to_string() == R"([{"f":"t","v":false}])");
       CHECK(internal_type::array == value.type());
     }
 
@@ -358,14 +361,16 @@ TEST_CASE("Simple Data Types") {
       const auto& right = makeArray({true, true, true, true});
       const auto& cmp = compare(left, right);
 
+      const auto expected_json =
+          R"([{"f":"t","v":true},{"f":"t","v":true},{"f":"t","v":true},{"f":"t","v":true}])";
       CHECK(flatten(left).size() == 4ul);
-      CHECK(left.to_string() == "[true,true,true,true]");
-      CHECK(right.to_string() == "[true,true,true,true]");
+      CHECK(left.to_string() == expected_json);
+      CHECK(right.to_string() == expected_json);
       CHECK(internal_type::array == left.type());
       CHECK(internal_type::array == right.type());
       CHECK(internal_type::array == cmp.srcType);
       CHECK(internal_type::unknown == cmp.dstType);
-      CHECK(cmp.srcValue == "[true,true,true,true]");
+      CHECK(cmp.srcValue == expected_json);
       CHECK(cmp.dstValue == "");
       CHECK(MatchType::Perfect == cmp.match);
       CHECK(cmp.score == 1.0);
@@ -385,11 +390,13 @@ TEST_CASE("Simple Data Types") {
       const auto& itype = deserialize(buffer);
       const auto& cmp = compare(value, itype);
 
+      const auto expected_json =
+          R"([{"f":"l","v":41},{"f":"l","v":42},{"f":"l","v":43},{"f":"l","v":44}])";
       CHECK(internal_type::array == itype.type());
-      CHECK(itype.to_string() == R"([41,42,43,44])");
+      CHECK(itype.to_string() == expected_json);
       CHECK(internal_type::array == cmp.srcType);
       CHECK(internal_type::unknown == cmp.dstType);
-      CHECK(cmp.srcValue == R"([41,42,43,44])");
+      CHECK(cmp.srcValue == expected_json);
       CHECK(cmp.dstValue == "");
       CHECK(MatchType::Perfect == cmp.match);
       CHECK(cmp.score == 1.0);
@@ -409,15 +416,13 @@ TEST_CASE("Simple Data Types") {
       const auto& itype = deserialize(buffer);
       const auto& cmp = compare(value, itype);
 
+      const auto expected_json =
+          R"([{"f":"f","v":1.100000023841858},{"f":"f","v":1.2000000476837158},{"f":"f","v":1.2999999523162842},{"f":"f","v":1.399999976158142}])";
       CHECK(internal_type::array == itype.type());
-      CHECK(
-          itype.to_string() ==
-          R"([1.100000023841858,1.2000000476837158,1.2999999523162842,1.399999976158142])");
+      CHECK(itype.to_string() == expected_json);
       CHECK(internal_type::array == cmp.srcType);
       CHECK(internal_type::unknown == cmp.dstType);
-      CHECK(
-          cmp.srcValue ==
-          R"([1.100000023841858,1.2000000476837158,1.2999999523162842,1.399999976158142])");
+      CHECK(cmp.srcValue == expected_json);
       CHECK(cmp.dstValue == "");
       CHECK(MatchType::Perfect == cmp.match);
       CHECK(cmp.score == 1.0);
@@ -437,12 +442,14 @@ TEST_CASE("Simple Data Types") {
       const auto& buffer = serialize(value);
       const auto& itype = deserialize(buffer);
 
+      const auto expected_json =
+          R"([{"f":"s","v":"a"},{"f":"s","v":"b"},{"f":"s","v":"c"},{"f":"s","v":"d"}])";
       CHECK(internal_type::array == itype.type());
-      CHECK(itype.to_string() == R"(["a","b","c","d"])");
+      CHECK(itype.to_string() == expected_json);
       const auto& cmp = compare(value, itype);
       CHECK(internal_type::array == cmp.srcType);
       CHECK(internal_type::unknown == cmp.dstType);
-      CHECK(cmp.srcValue == R"(["a","b","c","d"])");
+      CHECK(cmp.srcValue == expected_json);
       CHECK(cmp.dstValue == "");
       CHECK(MatchType::Perfect == cmp.match);
       CHECK(cmp.score == 1.0);
@@ -462,14 +469,22 @@ TEST_CASE("Simple Data Types") {
       const auto& cmp = compare(left, right);
 
       CHECK(flatten(left).size() == 4ul);
-      CHECK(left.to_string() == "[false,true,false,true]");
-      CHECK(right.to_string() == "[true,false,false,true]");
+      CHECK(
+          left.to_string() ==
+          R"([{"f":"t","v":false},{"f":"t","v":true},{"f":"t","v":false},{"f":"t","v":true}])");
+      CHECK(
+          right.to_string() ==
+          R"([{"f":"t","v":true},{"f":"t","v":false},{"f":"t","v":false},{"f":"t","v":true}])");
       CHECK(internal_type::array == left.type());
       CHECK(internal_type::array == right.type());
       CHECK(internal_type::array == cmp.srcType);
       CHECK(internal_type::unknown == cmp.dstType);
-      CHECK(cmp.srcValue == "[false,true,false,true]");
-      CHECK(cmp.dstValue == "[true,false,false,true]");
+      CHECK(
+          cmp.srcValue ==
+          R"([{"f":"t","v":false},{"f":"t","v":true},{"f":"t","v":false},{"f":"t","v":true}])");
+      CHECK(
+          cmp.dstValue ==
+          R"([{"f":"t","v":true},{"f":"t","v":false},{"f":"t","v":false},{"f":"t","v":true}])");
       CHECK(MatchType::None == cmp.match);
       CHECK(cmp.score == 0.5);
       CHECK(cmp.desc.empty());
@@ -513,14 +528,22 @@ TEST_CASE("Simple Data Types") {
 
       CHECK(flatten(left).size() == 4ul);
       CHECK(flatten(right).size() == 6ul);
-      CHECK(left.to_string() == "[1,1,1,1]");
-      CHECK(right.to_string() == "[1,1,1,1,1,1]");
+      CHECK(
+          left.to_string() ==
+          R"([{"f":"l","v":1},{"f":"l","v":1},{"f":"l","v":1},{"f":"l","v":1}])");
+      CHECK(
+          right.to_string() ==
+          R"([{"f":"l","v":1},{"f":"l","v":1},{"f":"l","v":1},{"f":"l","v":1},{"f":"l","v":1},{"f":"l","v":1}])");
 
       const auto& cmp1 = compare(left, right);
       CHECK(internal_type::array == cmp1.srcType);
       CHECK(internal_type::unknown == cmp1.dstType);
-      CHECK(cmp1.srcValue == "[1,1,1,1]");
-      CHECK(cmp1.dstValue == "[1,1,1,1,1,1]");
+      CHECK(
+          cmp1.srcValue ==
+          R"([{"f":"l","v":1},{"f":"l","v":1},{"f":"l","v":1},{"f":"l","v":1}])");
+      CHECK(
+          cmp1.dstValue ==
+          R"([{"f":"l","v":1},{"f":"l","v":1},{"f":"l","v":1},{"f":"l","v":1},{"f":"l","v":1},{"f":"l","v":1}])");
       CHECK(MatchType::None == cmp1.match);
       CHECK(cmp1.score == 0.0);
       CHECK(cmp1.desc.size() == 1u);
@@ -529,8 +552,12 @@ TEST_CASE("Simple Data Types") {
       const auto& cmp2 = compare(right, left);
       CHECK(internal_type::array == cmp2.srcType);
       CHECK(internal_type::unknown == cmp2.dstType);
-      CHECK(cmp2.srcValue == "[1,1,1,1,1,1]");
-      CHECK(cmp2.dstValue == "[1,1,1,1]");
+      CHECK(
+          cmp2.srcValue ==
+          R"([{"f":"l","v":1},{"f":"l","v":1},{"f":"l","v":1},{"f":"l","v":1},{"f":"l","v":1},{"f":"l","v":1}])");
+      CHECK(
+          cmp2.dstValue ==
+          R"([{"f":"l","v":1},{"f":"l","v":1},{"f":"l","v":1},{"f":"l","v":1}])");
       CHECK(MatchType::None == cmp2.match);
       CHECK(cmp2.score == 0.0);
       CHECK(cmp2.desc.size() == 1u);
@@ -551,10 +578,14 @@ TEST_CASE("Simple Data Types") {
       const auto& cmp = compare(value, itype);
 
       CHECK(internal_type::array == itype.type());
-      CHECK(itype.to_string() == R"([false,true,false,true])");
+      CHECK(
+          itype.to_string() ==
+          R"([{"f":"t","v":false},{"f":"t","v":true},{"f":"t","v":false},{"f":"t","v":true}])");
       CHECK(internal_type::array == cmp.srcType);
       CHECK(internal_type::unknown == cmp.dstType);
-      CHECK(cmp.srcValue == R"([false,true,false,true])");
+      CHECK(
+          cmp.srcValue ==
+          R"([{"f":"t","v":false},{"f":"t","v":true},{"f":"t","v":false},{"f":"t","v":true}])");
       CHECK(cmp.dstValue == "");
       CHECK(MatchType::Perfect == cmp.match);
       CHECK(cmp.score == 1.0);
@@ -565,17 +596,19 @@ TEST_CASE("Simple Data Types") {
   SECTION("type: object") {
     SECTION("initialize: add number to object") {
       touca::object value("creature");
-      CHECK_NOTHROW(data_point(value));
       CHECK(flatten(value).empty());
-      CHECK(data_point(value).to_string() == R"({"creature":{}})");
+      CHECK(data_point(value).to_string() ==
+            R"({"f":"o","n":"creature","v":[]})");
       value.add("number of heads", 1);
       CHECK(flatten(value).count("number of heads"));
-      CHECK(data_point(value).to_string() ==
-            R"({"creature":{"number of heads":1}})");
+      CHECK(
+          data_point(value).to_string() ==
+          R"({"f":"o","n":"creature","v":[{"f":"l","k":"number of heads","v":1}]})");
       value.add("number of tails", 0);
       CHECK(flatten(value).count("number of tails"));
-      CHECK(data_point(value).to_string() ==
-            R"({"creature":{"number of heads":1,"number of tails":0}})");
+      CHECK(
+          data_point(value).to_string() ==
+          R"({"f":"o","n":"creature","v":[{"f":"l","k":"number of heads","v":1},{"f":"l","k":"number of tails","v":0}]})");
     }
 
     SECTION("initialize: add object to object") {
@@ -584,8 +617,9 @@ TEST_CASE("Simple Data Types") {
       Head head1(2);
       value.add("first_head", head1);
       CHECK(flatten(value).count("first_head.eyes"));
-      CHECK(data_point(value).to_string() ==
-            R"({"creature":{"first_head":{"head":{"eyes":2}}}})");
+      CHECK(
+          data_point(value).to_string() ==
+          R"({"f":"o","n":"creature","v":[{"f":"o","k":"first_head","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":2}]}}]})");
     }
 
     SECTION("compare: match") {
@@ -597,8 +631,9 @@ TEST_CASE("Simple Data Types") {
 
       CHECK(internal_type::object == cmp.srcType);
       CHECK(internal_type::unknown == cmp.dstType);
-      CHECK(cmp.srcValue ==
-            R"({"creature":{"first_head":{"head":{"eyes":2}}}})");
+      CHECK(
+          cmp.srcValue ==
+          R"({"f":"o","n":"creature","v":[{"f":"o","k":"first_head","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":2}]}}]})");
       CHECK(cmp.dstValue == R"()");
       CHECK(MatchType::Perfect == cmp.match);
       CHECK(cmp.score == 1.0);
@@ -614,10 +649,12 @@ TEST_CASE("Simple Data Types") {
 
       CHECK(internal_type::object == cmp.srcType);
       CHECK(internal_type::unknown == cmp.dstType);
-      CHECK(cmp.srcValue ==
-            R"({"creature":{"first_head":{"head":{"eyes":2}}}})");
-      CHECK(cmp.dstValue ==
-            R"({"some_other_creature":{"first_head":{"head":{"eyes":3}}}})");
+      CHECK(
+          cmp.srcValue ==
+          R"({"f":"o","n":"creature","v":[{"f":"o","k":"first_head","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":2}]}}]})");
+      CHECK(
+          cmp.dstValue ==
+          R"({"f":"o","n":"some_other_creature","v":[{"f":"o","k":"first_head","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":3}]}}]})");
       CHECK(MatchType::None == cmp.match);
       CHECK(cmp.score == 0.0);
       CHECK(cmp.desc.size() == 1u);
@@ -630,7 +667,7 @@ TEST_CASE("Simple Data Types") {
       const auto& buffer = serialize(value);
       const auto& itype = deserialize(buffer);
       const auto& expected =
-          R"({"creature":{"first_head":{"head":{"eyes":2}}}})";
+          R"({"f":"o","n":"creature","v":[{"f":"o","k":"first_head","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":2}]}}]})";
       const auto& cmp = compare(value, itype);
 
       CHECK(internal_type::object == itype.type());
@@ -659,7 +696,7 @@ TEST_CASE("Simple Data Types") {
 
       CHECK(
           left.to_string() ==
-          R"([{"head":{"eyes":1}},{"head":{"eyes":3}},{"head":{"eyes":4}},{"head":{"eyes":1}},{"head":{"eyes":0}}])");
+          R"([{"f":"o","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":1}]}},{"f":"o","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":3}]}},{"f":"o","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":4}]}},{"f":"o","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":1}]}},{"f":"o","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":0}]}}])");
       CHECK(flatten(left).size() == 5ul);
       CHECK(flatten(left).count("[2]eyes"));
       CHECK(flatten(left).at("[2]eyes").to_string() == R"(4)");
@@ -672,7 +709,8 @@ TEST_CASE("Simple Data Types") {
     SECTION("std::pair") {
       using type_t = std::pair<bool, bool>;
       const type_t value(true, false);
-      const auto& expected = R"({"std::pair":{"first":true,"second":false}})";
+      const auto& expected =
+          R"({"f":"o","n":"std::pair","v":[{"f":"t","k":"first","v":true},{"f":"t","k":"second","v":false}]})";
 
       SECTION("initialize") {
         const auto& itype = serializer<type_t>().serialize(value);
@@ -692,8 +730,9 @@ TEST_CASE("Simple Data Types") {
         CHECK(internal_type::object == cmp.srcType);
         CHECK(internal_type::unknown == cmp.dstType);
         CHECK(cmp.srcValue == expected);
-        CHECK(cmp.dstValue ==
-              R"({"std::pair":{"first":false,"second":false}})");
+        CHECK(
+            cmp.dstValue ==
+            R"({"f":"o","n":"std::pair","v":[{"f":"t","k":"first","v":false},{"f":"t","k":"second","v":false}]})");
         CHECK(MatchType::None == cmp.match);
         CHECK(cmp.score == 0.5);
         CHECK(cmp.desc.empty());
@@ -712,7 +751,7 @@ TEST_CASE("Simple Data Types") {
       CHECK(internal_type::unknown == cmp.dstType);
       CHECK(
           cmp.srcValue ==
-          R"([{"std::pair":{"first":"k1","second":"v1"}},{"std::pair":{"first":"k2","second":"v2"}}])");
+          R"([{"f":"o","n":"std::pair","v":{"f":"o","n":"std::pair","v":[{"f":"s","k":"first","v":"k1"},{"f":"s","k":"second","v":"v1"}]}},{"f":"o","n":"std::pair","v":{"f":"o","n":"std::pair","v":[{"f":"s","k":"first","v":"k2"},{"f":"s","k":"second","v":"v2"}]}}])");
       CHECK(MatchType::Perfect == cmp.match);
       CHECK(cmp.score == 1.0);
       CHECK(cmp.desc.empty());
@@ -725,7 +764,9 @@ TEST_CASE("Simple Data Types") {
         const auto& value = std::make_shared<bool>(true);
         const auto& itype = serializer<type_t>().serialize(value);
         CHECK(internal_type::object == itype.type());
-        CHECK(itype.to_string() == R"({"std::shared_ptr":{"v":true}})");
+        CHECK(
+            itype.to_string() ==
+            R"({"f":"o","n":"std::shared_ptr","v":[{"f":"t","k":"v","v":true}]})");
         CHECK_FALSE(flatten(itype).empty());
         CHECK(flatten(itype).count("v"));
         CHECK(flatten(itype).at("v").to_string() == R"(true)");
@@ -735,7 +776,7 @@ TEST_CASE("Simple Data Types") {
         const type_t value;
         const auto& itype = serializer<type_t>().serialize(value);
         CHECK(internal_type::object == itype.type());
-        CHECK(itype.to_string() == R"({"std::shared_ptr":{}})");
+        CHECK(itype.to_string() == R"({"f":"o","n":"std::shared_ptr","v":[]})");
         CHECK(flatten(itype).empty());
       }
 
@@ -750,8 +791,12 @@ TEST_CASE("Simple Data Types") {
         CHECK(cmp.score == 0.0);
         CHECK(internal_type::object == cmp.srcType);
         CHECK(internal_type::unknown == cmp.dstType);
-        CHECK(cmp.srcValue == R"({"std::shared_ptr":{"v":true}})");
-        CHECK(cmp.dstValue == R"({"std::shared_ptr":{"v":false}})");
+        CHECK(
+            cmp.srcValue ==
+            R"({"f":"o","n":"std::shared_ptr","v":[{"f":"t","k":"v","v":true}]})");
+        CHECK(
+            cmp.dstValue ==
+            R"({"f":"o","n":"std::shared_ptr","v":[{"f":"t","k":"v","v":false}]})");
         CHECK(cmp.desc.empty());
       }
     }
@@ -761,10 +806,10 @@ TEST_CASE("Simple Data Types") {
       type_t value = {{1u, true}, {2u, false}};
       const auto& itype = serializer<type_t>().serialize(value);
 
+      const auto expected_json =
+          R"([{"f":"o","n":"std::pair","v":{"f":"o","n":"std::pair","v":[{"f":"u","k":"first","v":1},{"f":"t","k":"second","v":true}]}},{"f":"o","n":"std::pair","v":{"f":"o","n":"std::pair","v":[{"f":"u","k":"first","v":2},{"f":"t","k":"second","v":false}]}}])";
       CHECK(internal_type::array == itype.type());
-      CHECK(
-          itype.to_string() ==
-          R"([{"std::pair":{"first":1,"second":true}},{"std::pair":{"first":2,"second":false}}])");
+      CHECK(itype.to_string() == expected_json);
       CHECK(flatten(itype).size() == 4u);
       CHECK(flatten(itype).count("[0]first"));
       CHECK(flatten(itype).count("[0]second"));

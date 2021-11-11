@@ -61,17 +61,19 @@ TEST_CASE("Result File Operations") {
      */
     SECTION("calling read_file_in_json on loaded file will not re-parse file") {
       const auto tmpJson = resultFile.read_file_in_json();
-      const auto expected =
-          R"~("results":[{"key":"firstname","value":"alice"},{"key":"lastname","value":"anderson"}],"assertion":[],"metrics":[])~";
-      REQUIRE_THAT(tmpJson, Catch::Contains(expected));
+      REQUIRE_THAT(
+          tmpJson,
+          Catch::Contains(
+              R"("results":[{"c":0,"f":"s","k":"firstname","v":"alice"},{"c":0,"f":"s","k":"lastname","v":"anderson"}],"metrics":[]}])"));
     }
 
     SECTION("calling read_file_in_json without load should implicitly parse") {
       touca::ResultFile newResultFile(tmpFile.path);
       const auto tmpJson = newResultFile.read_file_in_json();
-      const auto expected =
-          R"~("results":[{"key":"firstname","value":"alice"},{"key":"lastname","value":"anderson"}],"assertion":[],"metrics":[])~";
-      REQUIRE_THAT(tmpJson, Catch::Contains(expected));
+      REQUIRE_THAT(
+          tmpJson,
+          Catch::Contains(
+              R"("results":[{"c":0,"f":"s","k":"firstname","v":"alice"},{"c":0,"f":"s","k":"lastname","v":"anderson"}],"metrics":[]}])"));
     }
 
     SECTION("merge") {
@@ -152,9 +154,9 @@ TEST_CASE("Result File Operations") {
         const auto& output = cmp.json();
         const auto& check1 = R"~(,"commonCases":[]})~";
         const auto& check2 =
-            R"~("missingCases":[{"teamslug":"acme","testsuite":"students","version":"1.0","testcase":"aanderson","builtAt":)~";
+            R"("missingCases":[{"team":"acme","suite":"students","version":"1.0","testcase":"aanderson")";
         const auto& check3 =
-            R"~({"newCases":[{"teamslug":"acme","testsuite":"students","version":"1.0","testcase":"bbrown","builtAt":)~";
+            R"({"newCases":[{"team":"acme","suite":"students","version":"1.0","testcase":"bbrown")";
         CHECK_THAT(output, Catch::Contains(check1));
         CHECK_THAT(output, Catch::Contains(check2));
         CHECK_THAT(output, Catch::Contains(check3));
