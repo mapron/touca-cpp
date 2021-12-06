@@ -64,7 +64,7 @@ TEST_CASE("Result File Operations") {
       REQUIRE_THAT(
           tmpJson,
           Catch::Contains(
-              R"("results":[{"c":0,"f":"s","k":"firstname","v":"alice"},{"c":0,"f":"s","k":"lastname","v":"anderson"}],"metrics":[]}])"));
+              R"("results":[{"f":"s","k":"firstname","v":"alice"},{"f":"s","k":"lastname","v":"anderson"}],"assertion":[],"metrics":[]}])"));
     }
 
     SECTION("calling read_file_in_json without load should implicitly parse") {
@@ -73,7 +73,7 @@ TEST_CASE("Result File Operations") {
       REQUIRE_THAT(
           tmpJson,
           Catch::Contains(
-              R"("results":[{"c":0,"f":"s","k":"firstname","v":"alice"},{"c":0,"f":"s","k":"lastname","v":"anderson"}],"metrics":[]}])"));
+              R"("results":[{"f":"s","k":"firstname","v":"alice"},{"f":"s","k":"lastname","v":"anderson"}],"assertion":[],"metrics":[]}])"));
     }
 
     SECTION("merge") {
@@ -116,11 +116,11 @@ TEST_CASE("Result File Operations") {
 
       SECTION("json-representation") {
         const auto& output = cmp.json();
-        const auto& check1 = R"~({"newCases":[],"missingCases":[])~";
+        const auto& check1 = R"({"newCases":[],"missingCases":[])";
         const auto& check2 =
-            R"~("metrics":{"commonKeys":[],"missingKeys":[],"newKeys":[]})~";
+            R"("metrics":{"commonKeys":[],"missingKeys":[],"newKeys":[]})";
         const auto& check3 =
-            R"~("assertions":{"commonKeys":[],"missingKeys":[],"newKeys":[]})~";
+            R"("assertions":{"commonKeys":[],"missingKeys":[],"newKeys":[]})";
         CHECK_THAT(output, Catch::Contains(check1));
         CHECK_THAT(output, Catch::Contains(check2));
         CHECK_THAT(output, Catch::Contains(check3));
@@ -152,7 +152,7 @@ TEST_CASE("Result File Operations") {
 
       SECTION("json-representation") {
         const auto& output = cmp.json();
-        const auto& check1 = R"~(,"commonCases":[]})~";
+        const auto& check1 = R"(,"commonCases":[]})";
         const auto& check2 =
             R"("missingCases":[{"team":"acme","suite":"students","version":"1.0","testcase":"aanderson")";
         const auto& check3 =

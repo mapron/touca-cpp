@@ -107,7 +107,6 @@ class TOUCA_CLIENT_API data_point {
   static data_point string(const detail::string_t& value);
 
   void increment();
-  std::string object_name() const { return _name; };
   detail::array_t* as_array() const;
   detail::number_unsigned_t as_metric() const;
   detail::internal_type type() const;
@@ -238,7 +237,7 @@ class TOUCA_CLIENT_API object {
 
  public:
   object(const std::string& name = "")
-      : name(name), _v(detail::create<detail::object_t>()) {}
+      : _name(name), _v(detail::create<detail::object_t>()) {}
 
   template <typename T>
   object& add(const std::string& key, const T& value) {
@@ -246,9 +245,8 @@ class TOUCA_CLIENT_API object {
     return *this;
   }
 
-  const std::string name;
-
  private:
+  const std::string _name;
   detail::object_t* _v;
 };
 

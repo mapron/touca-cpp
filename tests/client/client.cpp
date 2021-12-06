@@ -104,7 +104,7 @@ TEST_CASE("using a configured client") {
     CHECK(content_json.at(0).contains("metrics"));
     CHECK(content_json.at(0).contains("results"));
     const auto& expected =
-        R"("results":[{"c":0,"f":"a","k":"some-array-value","v":[{"f":"t","v":true}]},{"c":0,"f":"u","k":"some-other-value","v":1},{"c":0,"f":"t","k":"some-value","v":true}])";
+        R"("results":[{"f":"a","k":"some-array-value","v":[{"f":"t","v":true}]},{"f":"u","k":"some-other-value","v":1},{"f":"t","k":"some-value","v":true}])";
     CHECK_THAT(content, Catch::Contains(expected));
   }
 
@@ -132,8 +132,10 @@ TEST_CASE("using a configured client") {
     CHECK(tc->metrics().size() == 1);
     CHECK(tc->metrics().count("b"));
     const auto& content = save_and_read_back(client);
-    CHECK_THAT(content, Catch::Contains(
-                            R"("results":[],"metrics":[{"k":"b","v":0}]}])"));
+    CHECK_THAT(
+        content,
+        Catch::Contains(
+            R"("results":[],"assertion":[],"metrics":[{"k":"b","v":0}]}])"));
   }
 
   SECTION("forget_testcase") {

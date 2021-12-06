@@ -157,17 +157,23 @@ MetricsMap Testcase::metrics() const {
 }
 
 nlohmann::ordered_json Testcase::json() const {
-  auto json_results = nlohmann::json::array();
+  std::array<nlohmann::json, 2> results = {
+      nlohmann::json::array(),
+      nlohmann::json::array(),
+  };
   for (const auto& entry : _resultsMap) {
-    nlohmann::json item(
-        {{"c", entry.second.typ == ResultCategory::Check ? 0 : 1},
-         {"f", to_string(entry.second.val.type())},
-         {"k", entry.first},
-         {"v", entry.second.val}});
     if (entry.second.val.type() == detail::internal_type::object) {
-      item.emplace("n", entry.second.val.object_name());
+      nlohmann::json item = entry.second.val;
+      item.emplace("k", entry.first);
+      results[static_cast<uint8_t>(entry.second.typ) - 1].push_back(item);
+      continue;
     }
-    json_results.push_back(item);
+    nlohmann::json item({
+        {"f", to_string(entry.second.val.type())},
+        {"k", entry.first},
+        {"v", entry.second.val},
+    });
+    results[static_cast<uint8_t>(entry.second.typ) - 1].push_back(item);
   }
 
   auto json_metrics = nlohmann::json::array();
@@ -176,9 +182,12 @@ nlohmann::ordered_json Testcase::json() const {
         nlohmann::json({{"k", entry.first}, {"v", entry.second.value}}));
   }
 
-  return nlohmann::ordered_json({{"header", _metadata.json()},
-                                 {"results", json_results},
-                                 {"metrics", json_metrics}});
+  return nlohmann::ordered_json({
+      {"header", _metadata.json()},
+      {"results", results[static_cast<uint8_t>(ResultCategory::Check) - 1]},
+      {"assertion", results[static_cast<uint8_t>(ResultCategory::Assert) - 1]},
+      {"metrics", json_metrics},
+  });
 }
 
 std::vector<uint8_t> Testcase::flatbuffers() const {

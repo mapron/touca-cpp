@@ -619,7 +619,7 @@ TEST_CASE("Simple Data Types") {
       CHECK(flatten(value).count("first_head.eyes"));
       CHECK(
           data_point(value).to_string() ==
-          R"({"f":"o","n":"creature","v":[{"f":"o","k":"first_head","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":2}]}}]})");
+          R"({"f":"o","n":"creature","v":[{"f":"o","k":"first_head","n":"head","v":[{"f":"u","k":"eyes","v":2}]}]})");
     }
 
     SECTION("compare: match") {
@@ -633,7 +633,7 @@ TEST_CASE("Simple Data Types") {
       CHECK(internal_type::unknown == cmp.dstType);
       CHECK(
           cmp.srcValue ==
-          R"({"f":"o","n":"creature","v":[{"f":"o","k":"first_head","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":2}]}}]})");
+          R"({"f":"o","n":"creature","v":[{"f":"o","k":"first_head","n":"head","v":[{"f":"u","k":"eyes","v":2}]}]})");
       CHECK(cmp.dstValue == R"()");
       CHECK(MatchType::Perfect == cmp.match);
       CHECK(cmp.score == 1.0);
@@ -651,10 +651,10 @@ TEST_CASE("Simple Data Types") {
       CHECK(internal_type::unknown == cmp.dstType);
       CHECK(
           cmp.srcValue ==
-          R"({"f":"o","n":"creature","v":[{"f":"o","k":"first_head","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":2}]}}]})");
+          R"({"f":"o","n":"creature","v":[{"f":"o","k":"first_head","n":"head","v":[{"f":"u","k":"eyes","v":2}]}]})");
       CHECK(
           cmp.dstValue ==
-          R"({"f":"o","n":"some_other_creature","v":[{"f":"o","k":"first_head","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":3}]}}]})");
+          R"({"f":"o","n":"some_other_creature","v":[{"f":"o","k":"first_head","n":"head","v":[{"f":"u","k":"eyes","v":3}]}]})");
       CHECK(MatchType::None == cmp.match);
       CHECK(cmp.score == 0.0);
       CHECK(cmp.desc.size() == 1u);
@@ -667,7 +667,7 @@ TEST_CASE("Simple Data Types") {
       const auto& buffer = serialize(value);
       const auto& itype = deserialize(buffer);
       const auto& expected =
-          R"({"f":"o","n":"creature","v":[{"f":"o","k":"first_head","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":2}]}}]})";
+          R"({"f":"o","n":"creature","v":[{"f":"o","k":"first_head","n":"head","v":[{"f":"u","k":"eyes","v":2}]}]})";
       const auto& cmp = compare(value, itype);
 
       CHECK(internal_type::object == itype.type());
@@ -696,7 +696,7 @@ TEST_CASE("Simple Data Types") {
 
       CHECK(
           left.to_string() ==
-          R"([{"f":"o","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":1}]}},{"f":"o","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":3}]}},{"f":"o","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":4}]}},{"f":"o","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":1}]}},{"f":"o","n":"head","v":{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":0}]}}])");
+          R"([{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":1}]},{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":3}]},{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":4}]},{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":1}]},{"f":"o","n":"head","v":[{"f":"u","k":"eyes","v":0}]}])");
       CHECK(flatten(left).size() == 5ul);
       CHECK(flatten(left).count("[2]eyes"));
       CHECK(flatten(left).at("[2]eyes").to_string() == R"(4)");
@@ -751,7 +751,7 @@ TEST_CASE("Simple Data Types") {
       CHECK(internal_type::unknown == cmp.dstType);
       CHECK(
           cmp.srcValue ==
-          R"([{"f":"o","n":"std::pair","v":{"f":"o","n":"std::pair","v":[{"f":"s","k":"first","v":"k1"},{"f":"s","k":"second","v":"v1"}]}},{"f":"o","n":"std::pair","v":{"f":"o","n":"std::pair","v":[{"f":"s","k":"first","v":"k2"},{"f":"s","k":"second","v":"v2"}]}}])");
+          R"([{"f":"o","n":"std::pair","v":[{"f":"s","k":"first","v":"k1"},{"f":"s","k":"second","v":"v1"}]},{"f":"o","n":"std::pair","v":[{"f":"s","k":"first","v":"k2"},{"f":"s","k":"second","v":"v2"}]}])");
       CHECK(MatchType::Perfect == cmp.match);
       CHECK(cmp.score == 1.0);
       CHECK(cmp.desc.empty());
@@ -807,7 +807,7 @@ TEST_CASE("Simple Data Types") {
       const auto& itype = serializer<type_t>().serialize(value);
 
       const auto expected_json =
-          R"([{"f":"o","n":"std::pair","v":{"f":"o","n":"std::pair","v":[{"f":"u","k":"first","v":1},{"f":"t","k":"second","v":true}]}},{"f":"o","n":"std::pair","v":{"f":"o","n":"std::pair","v":[{"f":"u","k":"first","v":2},{"f":"t","k":"second","v":false}]}}])";
+          R"([{"f":"o","n":"std::pair","v":[{"f":"u","k":"first","v":1},{"f":"t","k":"second","v":true}]},{"f":"o","n":"std::pair","v":[{"f":"u","k":"first","v":2},{"f":"t","k":"second","v":false}]}])";
       CHECK(internal_type::array == itype.type());
       CHECK(itype.to_string() == expected_json);
       CHECK(flatten(itype).size() == 4u);

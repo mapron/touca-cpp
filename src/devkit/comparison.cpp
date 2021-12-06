@@ -332,7 +332,6 @@ TestcaseComparison::TestcaseComparison(const Testcase& src, const Testcase& dst)
     : _src(src), _dst(dst) {
   _srcMeta = _src.metadata();
   _dstMeta = _dst.metadata();
-  // perform comparisons on assumptions
   init_cellar(_src._resultsMap, _dst._resultsMap, ResultCategory::Assert,
               _assumptions);
   init_cellar(_src._resultsMap, _dst._resultsMap, ResultCategory::Check,

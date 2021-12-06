@@ -38,7 +38,7 @@ TEST_CASE("Testcase") {
       REQUIRE_THAT(
           testcase.json().dump(),
           Catch::Contains(
-              R"("results":[{"c":0,"f":"u","k":"some-key","v":2},{"c":0,"f":"u","k":"some-other-key","v":1}])"));
+              R"("results":[{"f":"u","k":"some-key","v":2},{"f":"u","k":"some-other-key","v":1}],"assertion":[],"metrics":[]})"));
     }
 
     SECTION("unexpected-use: key is already used to store boolean") {
@@ -71,7 +71,7 @@ TEST_CASE("Testcase") {
       REQUIRE_THAT(
           testcase.json().dump(),
           Catch::Contains(
-              R"("results":[{"c":0,"f":"a","k":"some-key","v":[{"f":"u","v":0},{"f":"u","v":1},{"f":"u","v":2}]}])"));
+              R"("results":[{"f":"a","k":"some-key","v":[{"f":"u","v":0},{"f":"u","v":1},{"f":"u","v":2}]}],"assertion":[],"metrics":[]})"));
     }
     SECTION("unexpected-use") {
       const auto someBool = data_point::boolean(true);
@@ -106,10 +106,11 @@ TEST_CASE("Testcase") {
     CHECK_THAT(
         before,
         Catch::Contains(
-            R"("results":[{"c":0,"f":"a","k":"some-array","v":[{"f":"t","v":true}]},{"c":0,"f":"t","k":"some-key","v":true},{"c":0,"f":"u","k":"some-new-key","v":1},{"c":1,"f":"t","k":"some-other-key","v":true}])"));
+            R"("results":[{"f":"a","k":"some-array","v":[{"f":"t","v":true}]},{"f":"t","k":"some-key","v":true},{"f":"u","k":"some-new-key","v":1}],"assertion":[{"f":"t","k":"some-other-key","v":true}],"metrics":[{"k":"some-metric","v":0}]})"));
     CHECK_THAT(before,
                Catch::Contains(R"("metrics":[{"k":"some-metric","v":0}])"));
-    CHECK_THAT(after, Catch::Contains(R"("results":[],"metrics":[])"));
+    CHECK_THAT(after,
+               Catch::Contains(R"("results":[],"assertion":[],"metrics":[]})"));
   }
 
   SECTION("overview") {

@@ -186,7 +186,7 @@ data_point::data_point(const array& value)
 data_point::data_point(const object& value)
     : _type(detail::internal_type::object),
       _value(detail::internal_value::as_object()) {
-  _name = value.name;
+  _name = value._name;
   _value.object = value._v;
 }
 
@@ -288,27 +288,29 @@ void to_json(nlohmann::json& out, const data_point& value) {
     case detail::internal_type::array: {
       out = nlohmann::json::array();
       for (const auto& element : *value._value.array) {
-        nlohmann::json entry(
-            {{"f", to_string(element.type())}, {"v", element}});
         if (element.type() == detail::internal_type::object) {
-          entry.emplace("n", element._name);
+          out.push_back(element);
+        } else {
+          out.push_back({{"f", to_string(element.type())}, {"v", element}});
         }
-        out.push_back(nlohmann::json(entry));
       }
       break;
     }
     case detail::internal_type::object: {
       nlohmann::json items = nlohmann::ordered_json::array();
       for (const auto& member : *value._value.object) {
-        nlohmann::json entry({
+        if (member.second.type() == detail::internal_type::object) {
+          nlohmann::json item = member.second;
+          item.emplace("k", member.first);
+          item.emplace("n", member.second._name);
+          items.push_back(item);
+          continue;
+        }
+        items.push_back({
             {"f", to_string(member.second.type())},
             {"k", member.first},
             {"v", member.second},
         });
-        if (member.second.type() == detail::internal_type::object) {
-          entry.emplace("n", member.second._name);
-        }
-        items.push_back(entry);
       }
       out = nlohmann::ordered_json::object(
           {{"f", to_string(detail::internal_type::object)},
