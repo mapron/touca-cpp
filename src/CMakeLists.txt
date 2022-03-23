@@ -7,6 +7,7 @@ touca_find_package("flatbuffers" "Flatbuffers")
 touca_find_package("fmt")
 touca_find_package("ghcFilesystem")
 touca_find_package("httplib")
+touca_find_package("mpark_variant")
 touca_find_package("nlohmann_json")
 if (TOUCA_BUILD_FRAMEWORK)
     touca_find_package("cxxopts")
@@ -50,6 +51,7 @@ target_link_libraries(
         ghcFilesystem::ghcFilesystem
         flatbuffers::flatbuffers
         fmt::fmt
+        mpark_variant::mpark_variant
         nlohmann_json::nlohmann_json
         $<$<PLATFORM_ID:Linux>:pthread>
 )

@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "mpark/variant.hpp"
 #include "nlohmann/json_fwd.hpp"
 #include "touca/lib_api.hpp"
 

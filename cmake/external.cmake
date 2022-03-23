@@ -95,6 +95,21 @@ function(touca_find_httplib)
     endif()
 endfunction()
 
+function(touca_find_mpark_variant)
+    FetchContent_Declare(
+        mpark_variant
+        GIT_REPOSITORY  https://github.com/mpark/variant.git
+        GIT_TAG         v1.4.0
+    )
+    FetchContent_GetProperties(mpark_variant)
+    if(NOT mpark_variant_POPULATED)
+        FetchContent_Populate(mpark_variant)
+        add_library(mpark_variant INTERFACE)
+        add_library(mpark_variant::mpark_variant ALIAS mpark_variant)
+        target_include_directories(mpark_variant INTERFACE ${mpark_variant_SOURCE_DIR}/include)
+    endif()
+endfunction()
+
 function(touca_find_nlohmann_json)
     FetchContent_Declare(
         nlohmann_json
